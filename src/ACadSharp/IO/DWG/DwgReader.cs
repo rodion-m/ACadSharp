@@ -11,6 +11,7 @@ using System.Text;
 using ACadSharp.Exceptions;
 using ACadSharp.IO.DWG;
 using ACadSharp.IO.DWG.DwgStreamReaders;
+using ACadSharp.IO.DWG.FileHeaders;
 
 namespace ACadSharp.IO
 {
@@ -1063,7 +1064,7 @@ namespace ACadSharp.IO
 					{
 						//Read the stream normally
 						byte[] buffer = new byte[section.CompressedSize];
-						sreader.Stream.Read(buffer, 0, (int)section.CompressedSize);
+						StreamIO.ReadExactly(sreader.Stream, buffer, 0, (int)section.CompressedSize);
 						memoryStream.Write(buffer, 0, (int)section.CompressedSize);
 					}
 				}
@@ -1130,7 +1131,7 @@ namespace ACadSharp.IO
 
 					//Get the page data
 					byte[] pageBytes = new byte[pageData.Size];
-					this._fileStream.Stream.Read(pageBytes, 0, (int)pageData.Size);
+					StreamIO.ReadExactly(this._fileStream.Stream, pageBytes, 0, (int)pageData.Size);
 
 					if (section.Encoding == 4)
 					{
@@ -1220,7 +1221,7 @@ namespace ACadSharp.IO
 
 			//Relative to data page map 1, add 0x480 to get stream position
 			stream.Position = (long)(0x480 + pageOffset);
-			stream.Read(buffer, 0, lenght);
+			StreamIO.ReadExactly(stream, buffer, 0, lenght);
 
 			byte[] compressedData = new byte[(int)totalSize];
 			this.reedSolomonDecoding(buffer, compressedData, factor, blockSize);

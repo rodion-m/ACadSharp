@@ -124,7 +124,7 @@ namespace ACadSharp.IO.DXF
 				//Check with mapper
 				case 100:
 					this.currentSubclass = this._reader.ValueAsString;
-					if (map != null && !map.SubClasses.ContainsKey(this._reader.ValueAsString))
+					if (map != null && !map.SubClasses.ContainsKey(this._reader.ValueAsString) && !this.shouldSuppressUnknownSubclassNotification(template, this._reader.ValueAsString))
 					{
 						this._builder.Notify($"[{template.CadObject.ObjectName}] Unidentified subclass {this._reader.ValueAsString}", NotificationType.Warning);
 					}
@@ -142,13 +142,27 @@ namespace ACadSharp.IO.DXF
 					this.readExtendedData(template.EDataTemplateByAppName);
 					break;
 				default:
-					this._builder.Notify($"[{this.currentSubclass}] Unhandled dxf code {this._reader.Code} with value {this._reader.ValueAsString}", NotificationType.None);
+					if (!this.shouldSuppressUnhandledCommonCodeNotification(template, this.currentSubclass, this._reader.Code, this._reader.ValueAsString))
+					{
+						this._builder.Notify($"[{this.currentSubclass}] Unhandled dxf code {this._reader.Code} with value {this._reader.ValueAsString}", NotificationType.None);
+					}
 					break;
 			}
 		}
 
+		protected virtual bool shouldSuppressUnknownSubclassNotification(CadTemplate template, string subclass)
+		{
+			return false;
+		}
+
+		protected virtual bool shouldSuppressUnhandledCommonCodeNotification(CadTemplate template, string currentSubclass, int code, string value)
+		{
+			return false;
+		}
+
 		protected CadEntityTemplate readEntity()
 		{
+			this.currentSubclass = string.Empty;
 			switch (this._reader.ValueAsString)
 			{
 				case DxfFileToken.EntityAttribute:
@@ -710,6 +724,9 @@ namespace ACadSharp.IO.DXF
 						break;
 					case 45:
 						mtext.ColumnData.Gutter = this._reader.ValueAsDouble;
+						break;
+					case 46:
+						mtext.ColumnData.Heights.Add(this._reader.ValueAsDouble);
 						break;
 					case 73:
 						mtext.ColumnData.AutoHeight = this._reader.ValueAsBool;
@@ -1309,7 +1326,7 @@ namespace ACadSharp.IO.DXF
 		{
 			this._reader.ReadNext();
 
-			DxfMap map = DxfMap.Create<MultiLeaderObjectContextData>();
+			var map = DxfClassMap.Create<MultiLeaderObjectContextData>();
 			var contextData = template.CadObject as MultiLeaderObjectContextData;
 
 			bool end = false;
@@ -1327,7 +1344,7 @@ namespace ACadSharp.IO.DXF
 						template.TextStyleHandle = this._reader.ValueAsHandle;
 						break;
 					default:
-						if (!this.tryAssignCurrentValue(contextData, map.SubClasses[contextData.SubclassMarker]))
+						if (!this.tryAssignCurrentValue(contextData, map))
 						{
 							this._builder.Notify($"[AcDbMLeaderObjectContextData] Unhandled dxf code {this._reader.Code} with value {this._reader.ValueAsString}", NotificationType.None);
 						}
@@ -1347,6 +1364,8 @@ namespace ACadSharp.IO.DXF
 		{
 			MultiLeaderObjectContextData.LeaderRoot root = new();
 			var map = DxfClassMap.Create(root.GetType(), nameof(MultiLeaderObjectContextData.LeaderRoot));
+			XYZ? breakStart = null;
+			XYZ? breakEnd = null;
 
 			this._reader.ReadNext();
 
@@ -1362,6 +1381,46 @@ namespace ACadSharp.IO.DXF
 						var lineTemplate = new LeaderLineTemplate();
 						template.LeaderLineTemplates.Add(lineTemplate);
 						root.Lines.Add(this.readMultiLeaderLine(lineTemplate));
+						break;
+					case 12:
+						commitBreakPair(root.BreakStartEndPointsPairs, ref breakStart, ref breakEnd);
+						breakStart = new XYZ(this._reader.ValueAsDouble, 0.0, 0.0);
+						break;
+					case 22:
+						if (breakStart.HasValue)
+						{
+							XYZ pt = breakStart.Value;
+							pt.Y = this._reader.ValueAsDouble;
+							breakStart = pt;
+						}
+						break;
+					case 32:
+						if (breakStart.HasValue)
+						{
+							XYZ pt = breakStart.Value;
+							pt.Z = this._reader.ValueAsDouble;
+							breakStart = pt;
+						}
+						break;
+					case 13:
+						breakEnd = new XYZ(this._reader.ValueAsDouble, 0.0, 0.0);
+						break;
+					case 23:
+						if (breakEnd.HasValue)
+						{
+							XYZ pt = breakEnd.Value;
+							pt.Y = this._reader.ValueAsDouble;
+							breakEnd = pt;
+						}
+						break;
+					case 33:
+						if (breakEnd.HasValue)
+						{
+							XYZ pt = breakEnd.Value;
+							pt.Z = this._reader.ValueAsDouble;
+							breakEnd = pt;
+						}
+						commitBreakPair(root.BreakStartEndPointsPairs, ref breakStart, ref breakEnd);
 						break;
 					default:
 						if (!this.tryAssignCurrentValue(root, map))
@@ -1379,6 +1438,7 @@ namespace ACadSharp.IO.DXF
 				this._reader.ReadNext();
 			}
 
+			commitBreakPair(root.BreakStartEndPointsPairs, ref breakStart, ref breakEnd);
 			return root;
 		}
 
@@ -1386,6 +1446,8 @@ namespace ACadSharp.IO.DXF
 		{
 			MultiLeaderObjectContextData.LeaderLine line = template.LeaderLine;
 			var map = DxfClassMap.Create(line.GetType(), nameof(MultiLeaderObjectContextData.LeaderLine));
+			XYZ? breakStart = null;
+			XYZ? breakEnd = null;
 
 			this._reader.ReadNext();
 
@@ -1408,6 +1470,46 @@ namespace ACadSharp.IO.DXF
 						pt.Z = this._reader.ValueAsDouble;
 						line.Points[line.Points.Count - 1] = pt;
 						break;
+					case 11:
+						commitBreakPair(line.StartEndPoints, ref breakStart, ref breakEnd);
+						breakStart = new XYZ(this._reader.ValueAsDouble, 0.0, 0.0);
+						break;
+					case 21:
+						if (breakStart.HasValue)
+						{
+							pt = breakStart.Value;
+							pt.Y = this._reader.ValueAsDouble;
+							breakStart = pt;
+						}
+						break;
+					case 31:
+						if (breakStart.HasValue)
+						{
+							pt = breakStart.Value;
+							pt.Z = this._reader.ValueAsDouble;
+							breakStart = pt;
+						}
+						break;
+					case 12:
+						breakEnd = new XYZ(this._reader.ValueAsDouble, 0.0, 0.0);
+						break;
+					case 22:
+						if (breakEnd.HasValue)
+						{
+							pt = breakEnd.Value;
+							pt.Y = this._reader.ValueAsDouble;
+							breakEnd = pt;
+						}
+						break;
+					case 32:
+						if (breakEnd.HasValue)
+						{
+							pt = breakEnd.Value;
+							pt.Z = this._reader.ValueAsDouble;
+							breakEnd = pt;
+						}
+						commitBreakPair(line.StartEndPoints, ref breakStart, ref breakEnd);
+						break;
 					case 305 when this._reader.ValueAsString.Equals("}"):
 						end = true;
 						break;
@@ -1427,7 +1529,22 @@ namespace ACadSharp.IO.DXF
 				this._reader.ReadNext();
 			}
 
+			commitBreakPair(line.StartEndPoints, ref breakStart, ref breakEnd);
 			return line;
+		}
+
+		private static void commitBreakPair(
+			IList<MultiLeaderObjectContextData.StartEndPointPair> target,
+			ref XYZ? start,
+			ref XYZ? end)
+		{
+			if (start.HasValue && end.HasValue)
+			{
+				target.Add(new MultiLeaderObjectContextData.StartEndPointPair(start.Value, end.Value));
+			}
+
+			start = null;
+			end = null;
 		}
 
 		private bool readShape(CadEntityTemplate template, DxfMap map, string subclass = null)
@@ -1958,37 +2075,49 @@ namespace ACadSharp.IO.DXF
 				return null;
 			}
 
-			//72
-			bool hasBulge = this._reader.ValueAsBool;
-			this._reader.ReadNext();
-
-			//73
-			bool isClosed = this._reader.ValueAsBool;
-			this._reader.ReadNext();
-
-			//93
-			int nvertices = this._reader.ValueAsInt;
-			this._reader.ReadNext();
-
-			for (int i = 0; i < nvertices; i++)
+			bool end = false;
+			bool hasBulge = false;
+			while (!end)
 			{
-				double bulge = 0.0;
-
-				//10
-				double x = this._reader.ValueAsDouble;
-				this._reader.ReadNext();
-				//20
-				double y = this._reader.ValueAsDouble;
-				this._reader.ReadNext();
-
-				if (hasBulge)
+				switch (this._reader.Code)
 				{
-					//42
-					bulge = this._reader.ValueAsDouble;
-					this._reader.ReadNext();
+					case 72:
+						hasBulge = this._reader.ValueAsBool;
+						break;
+					case 73:
+						boundary.IsClosed = this._reader.ValueAsBool;
+						break;
+					case 93:
+						int nvertices = this._reader.ValueAsInt;
+						this._reader.ReadNext();
+
+						for (int i = 0; i < nvertices; i++)
+						{
+							double bulge = 0.0;
+
+							//10
+							double x = this._reader.ValueAsDouble;
+							this._reader.ReadNext();
+							//20
+							double y = this._reader.ValueAsDouble;
+							this._reader.ReadNext();
+
+							if (hasBulge)
+							{
+								//42
+								bulge = this._reader.ValueAsDouble;
+								this._reader.ReadNext();
+							}
+
+							boundary.Vertices.Add(new XYZ(x, y, bulge));
+						}
+						continue;
+					default:
+						end = true;
+						continue;
 				}
 
-				boundary.Vertices.Add(new XYZ(x, y, bulge));
+				this._reader.ReadNext();
 			}
 
 			return boundary;
@@ -2277,7 +2406,7 @@ namespace ACadSharp.IO.DXF
 			{
 				if (!this._builder.Configuration.Failsafe)
 				{
-					throw ex;
+					throw;
 				}
 				else
 				{

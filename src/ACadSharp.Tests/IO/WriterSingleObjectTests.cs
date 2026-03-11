@@ -36,16 +36,19 @@ namespace ACadSharp.Tests.IO
 			Data.Add(new(nameof(SingleCaseGenerator.EntityColorByIndex)));
 			Data.Add(new(nameof(SingleCaseGenerator.CurrentEntityColorTrueColor)));
 			Data.Add(new(nameof(SingleCaseGenerator.CurrentEntityByIndex)));
+			Data.Add(new(nameof(SingleCaseGenerator.CurrentEntityByLayer)));
 			Data.Add(new(nameof(SingleCaseGenerator.CurrentEntityByBlock)));
 			Data.Add(new(nameof(SingleCaseGenerator.DefaultLayer)));
 			Data.Add(new(nameof(SingleCaseGenerator.LayerTrueColor)));
 			Data.Add(new(nameof(SingleCaseGenerator.SingleMText)));
+			Data.Add(new(nameof(SingleCaseGenerator.SingleLongMText)));
 			Data.Add(new(nameof(SingleCaseGenerator.SingleMTextRotation)));
 			Data.Add(new(nameof(SingleCaseGenerator.SingleMTextSpecialCharacter)));
 			Data.Add(new(nameof(SingleCaseGenerator.TextWithChineseCharacters)));
 			Data.Add(new(nameof(SingleCaseGenerator.CreateGroup)));
 			Data.Add(new(nameof(SingleCaseGenerator.SingleMTextMultiline)));
 			Data.Add(new(nameof(SingleCaseGenerator.SinglePoint)));
+			Data.Add(new(nameof(SingleCaseGenerator.PolylineVertexLayer)));
 			Data.Add(new(nameof(SingleCaseGenerator.ClosedLwPolyline)));
 			Data.Add(new(nameof(SingleCaseGenerator.ClosedPolyline2DTest)));
 			Data.Add(new(nameof(SingleCaseGenerator.ClosedPolyline3DTest)));
@@ -77,11 +80,11 @@ namespace ACadSharp.Tests.IO
 			Data.Add(new(nameof(SingleCaseGenerator.Dimensions)));
 			Data.Add(new(nameof(SingleCaseGenerator.DimensionWithLineType)));
 			Data.Add(new(nameof(SingleCaseGenerator.GeoData)));
-			Data.Add(new(nameof(SingleCaseGenerator.TextAlignment)));
 			Data.Add(new(nameof(SingleCaseGenerator.LineTypeInBlock)));
 			Data.Add(new(nameof(SingleCaseGenerator.XData)));
 			Data.Add(new(nameof(SingleCaseGenerator.XRef)));
 			Data.Add(new(nameof(SingleCaseGenerator.SPlineCreation)));
+			Data.Add(new(nameof(SingleCaseGenerator.TextAlignment)));
 			Data.Add(new(nameof(SingleCaseGenerator.CreateXRecords)));
 		}
 
@@ -630,6 +633,11 @@ namespace ACadSharp.Tests.IO
 				this.Document.Layers.Add(lay);
 			}
 
+			public void CurrentEntityByLayer()
+			{
+				this.Document.Header.CurrentEntityColor = Color.ByLayer;
+			}
+
 			public void CurrentEntityByBlock()
 			{
 				this.Document.Header.CurrentEntityColor = Color.ByBlock;
@@ -875,6 +883,7 @@ namespace ACadSharp.Tests.IO
 				ellipse.RadiusRatio = 0.5d;
 				ellipse.StartParameter = 0.0d;
 				ellipse.EndParameter = Math.PI * 2;
+				ellipse.MajorAxisEndPoint *= 4;
 				ellipse.Center = center;
 
 				var pline = new Polyline3D(ellipse.PolygonalVertexes(4));
@@ -926,6 +935,29 @@ namespace ACadSharp.Tests.IO
 
 			public void Empty()
 			{ }
+
+			public void PolylineVertexLayer()
+			{
+				var dxfLayer = new Layer("Example layer");
+				this.Document.Layers.Add(dxfLayer);
+				var anotherDxfLayer = new Layer("Another layer");
+				this.Document.Layers.Add(anotherDxfLayer);
+
+				var line = new Polyline2D(vertices: [new Vertex2D(new CSMath.XY(0, 0)), new Vertex2D(new CSMath.XY(100, 100))], isClosed: false)
+				{
+					Layer = dxfLayer,
+					Color = new Color(128)
+				};
+
+				var anotherLine = new Polyline2D(vertices: [new Vertex2D(new CSMath.XY(50, 50)), new Vertex2D(new CSMath.XY(100, 100))], isClosed: false)
+				{
+					Layer = anotherDxfLayer,
+					Color = new Color(64)
+				};
+
+				this.Document.Entities.Add(line);
+				this.Document.Entities.Add(anotherLine);
+			}
 
 			public void GenerateExampleDxf()
 			{
@@ -1296,6 +1328,16 @@ namespace ACadSharp.Tests.IO
 				MText mtext = new MText();
 
 				mtext.Value = "HELLO I'm an MTEXT";
+
+				this.Document.Entities.Add(mtext);
+			}
+
+			public void SingleLongMText()
+			{
+				MText mtext = new MText();
+
+				mtext.Value = "HELLO I'm a long MTEXT with more than 250 characters that I need to be tested in the dxfwriter to see if I've been written correctly in any Cad software.\n" +
+					"Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras accumsan erat velit, nec sagittis felis convallis id. Morbi ac metus at purus tempor ornare quis vel mi. Phasellus iaculis molestie neque eu ultrices. Praesent in interdum mauris. Nulla in mi non eros aliquam tempus ut at metus. Sed vel ligula vitae ante facilisis malesuada id sit amet elit. Praesent fringilla enim at ipsum posuere blandit. Aliquam id magna metus. Aenean at ex mi. Etiam auctor elit lectus, at eleifend urna feugiat sed. Vivamus vitae tortor vel enim consectetur venenatis. Nulla gravida tellus id fermentum feugiat. Pellentesque laoreet elit a mi.\n";
 
 				this.Document.Entities.Add(mtext);
 			}

@@ -1,4 +1,5 @@
 ﻿using ACadSharp.Entities;
+using ACadSharp.Entities.AecObjects;
 using ACadSharp.Objects;
 using CSMath;
 using System;
@@ -148,6 +149,7 @@ namespace ACadSharp.IO.DXF
 				case Solid3D:
 				case CadBody:
 				case Region:
+				case Wall:
 					this.notify($"Entity type not implemented {entity.GetType().FullName}", NotificationType.NotImplemented);
 					return false;
 				default:
@@ -656,6 +658,12 @@ namespace ACadSharp.IO.DXF
 			{
 				this._writer.Write(10, point);
 			}
+
+			foreach (MultiLeaderObjectContextData.StartEndPointPair startEndPointPair in leaderLine.StartEndPoints)
+			{
+				this._writer.Write(11, startEndPointPair.StartPoint);
+				this._writer.Write(12, startEndPointPair.EndPoint);
+			}
 			this._writer.Write(91, leaderLine.Index);
 
 			this._writer.Write(305, "}");   //	LEADER_Line
@@ -672,6 +680,12 @@ namespace ACadSharp.IO.DXF
 			this._writer.Write(10, leaderRoot.ConnectionPoint);
 
 			this._writer.Write(11, leaderRoot.Direction);
+
+			foreach (MultiLeaderObjectContextData.StartEndPointPair breakPair in leaderRoot.BreakStartEndPointsPairs)
+			{
+				this._writer.Write(12, breakPair.StartPoint);
+				this._writer.Write(13, breakPair.EndPoint);
+			}
 
 			this._writer.Write(90, leaderRoot.LeaderIndex);
 			this._writer.Write(40, leaderRoot.LandingDistance);

@@ -56,10 +56,17 @@ Check the [documentation](https://github.com/DomCR/ACadSharp/tree/master/docs/) 
 Building
 ---
 
-Before building run:
+To build from source, place `CSUtilities` as a sibling repository next to `ACadSharp` (the `ai-architect` workspace does this via root-level submodules):
 
 ```console
-git submodule update --init --recursive
+acad-inspector/
+  ACadSharp/
+  CSUtilities/
 ```
 
-This command will clone the submodules necessary to build the project.
+Then restore and build the solution:
+
+```console
+dotnet restore src/ACadSharp.sln
+dotnet build src/ACadSharp.sln
+```

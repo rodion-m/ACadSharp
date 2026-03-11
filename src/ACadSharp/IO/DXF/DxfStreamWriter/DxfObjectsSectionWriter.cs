@@ -5,6 +5,7 @@ using CSMath;
 using CSUtilities.Converters;
 using System;
 using System.Linq;
+using System.Numerics;
 
 namespace ACadSharp.IO.DXF
 {
@@ -376,6 +377,9 @@ namespace ACadSharp.IO.DXF
 
 			switch (co)
 			{
+				case AcdbPlaceHolder acdbPlaceHolder:
+					this.writeAcdbPlaceHolder(acdbPlaceHolder);
+					return;
 				case BookColor bookColor:
 					this.writeBookColor(bookColor);
 					return;
@@ -384,6 +388,9 @@ namespace ACadSharp.IO.DXF
 					return;
 				case DictionaryVariable dictvar:
 					this.writeDictionaryVariable(dictvar);
+					break;
+				case DimensionAssociation dimAssociation:
+					this.writeDimensionAssociation(dimAssociation);
 					break;
 				case GeoData geodata:
 					this.writeGeoData(geodata);
@@ -399,6 +406,12 @@ namespace ACadSharp.IO.DXF
 					return;
 				case Layout layout:
 					this.writeLayout(layout);
+					break;
+				case Field field:
+					this.writeField(field);
+					break;
+				case FieldList fieldList:
+					this.writeFieldList(fieldList);
 					break;
 				case MLineStyle mlStyle:
 					this.writeMLineStyle(mlStyle);
@@ -563,7 +576,10 @@ namespace ACadSharp.IO.DXF
 			{
 				case UnknownNonGraphicalObject:
 					return false;
-				case AcdbPlaceHolder:
+				case AecWallStyle:
+				case AecCleanupGroup:
+				case AecBinRecord:
+				case DimensionAssociation:
 				case EvaluationGraph:
 				case Material:
 				case MultiLeaderObjectContextData:
@@ -571,11 +587,104 @@ namespace ACadSharp.IO.DXF
 				case TableStyle:
 				case ProxyObject:
 				case BlockRepresentationData:
+				case MTextAttributeObjectContextData:
+				case BlockReferenceObjectContextData:
 					this.notify($"Object not implemented : {co.GetType().FullName}", NotificationType.NotImplemented);
 					return false;
 				default:
 					return true;
 			}
+		}
+
+		private void writeAcdbPlaceHolder(AcdbPlaceHolder acdbPlaceHolder)
+		{
+		}
+
+		private void writeDimensionAssociation(DimensionAssociation dimAssociation)
+		{
+			DxfClassMap map = DxfClassMap.Create<DimensionAssociation>();
+
+			this._writer.Write(100, DxfSubclassMarker.DimensionAssociation);
+
+			this._writer.WriteHandle(330, dimAssociation.Dimension, map);
+			this._writer.Write(90, (int)dimAssociation.AssociativityFlags, map);
+			this._writer.Write(70, dimAssociation.IsTransSpace, map);
+			this._writer.Write(71, (short)dimAssociation.RotatedDimensionType, map);
+
+			if (dimAssociation.AssociativityFlags.HasFlag(AssociativityFlags.FirstPointReference))
+			{
+				this.writeOsnapPointRef(dimAssociation.FirstPointRef);
+			}
+
+			if (dimAssociation.AssociativityFlags.HasFlag(AssociativityFlags.SecondPointReference))
+			{
+				this.writeOsnapPointRef(dimAssociation.SecondPointRef);
+			}
+
+			if (dimAssociation.AssociativityFlags.HasFlag(AssociativityFlags.ThirdPointReference))
+			{
+				this.writeOsnapPointRef(dimAssociation.ThirdPointRef);
+			}
+
+			if (dimAssociation.AssociativityFlags.HasFlag(AssociativityFlags.FourthPointReference))
+			{
+				this.writeOsnapPointRef(dimAssociation.FourthPointRef);
+			}
+		}
+
+		private void writeField(Field field)
+		{
+			this._writer.Write(DxfCode.Subclass, DxfSubclassMarker.Field);
+
+			this._writer.Write(1, field.EvaluatorId);
+
+			writeLongTextValue(2, 3, field.FieldCode);
+
+			this._writer.Write(90, field.Children.Count);
+			foreach (var item in field.Children)
+			{
+				this._writer.WriteHandle(360, item);
+			}
+
+			this._writer.Write(97, field.CadObjects.Count);
+			foreach (var item in field.CadObjects)
+			{
+				this._writer.WriteHandle(331, item);
+			}
+
+			this._writer.Write(91, (int)field.EvaluationOptionFlags);
+			this._writer.Write(92, (int)field.FilingOptionFlags);
+			this._writer.Write(94, (int)field.FieldStateFlags);
+			this._writer.Write(95, (int)field.EvaluationStatusFlags);
+			this._writer.Write(96, field.EvaluationErrorCode);
+			this._writer.Write(300, field.EvaluationErrorMessage);
+
+			this._writer.Write(93, field.Values.Count);
+			foreach (var item in field.Values)
+			{
+				this._writer.Write(6, item.Key);
+				this.writeCadValue(item.Value);
+			}
+
+			this._writer.Write(7, "ACFD_FIELD_VALUE");
+			this.writeCadValue(field.Value);
+
+			this.writeLongTextValue(301, 9, field.FormatString);
+			this._writer.Write(98, field.FormatString.Length);
+		}
+
+		private void writeFieldList(FieldList fieldList)
+		{
+			this._writer.Write(DxfCode.Subclass, DxfSubclassMarker.IdSet);
+
+			this._writer.Write(90, fieldList.Fields.Count);
+			foreach (Field field in fieldList.Fields)
+			{
+				this._writer.WriteHandle(330, field);
+				this.Holder.Objects.Enqueue(field);
+			}
+
+			this._writer.Write(DxfCode.Subclass, DxfSubclassMarker.FieldList);
 		}
 
 		private void writeImageDefinitionReactor(ImageDefinitionReactor reactor)
@@ -584,6 +693,26 @@ namespace ACadSharp.IO.DXF
 
 			this._writer.Write(90, reactor.ClassVersion);
 			this._writer.WriteHandle(330, reactor.Image);
+		}
+
+		private void writeOsnapPointRef(DimensionAssociation.OsnapPointRef osnapPoint)
+		{
+			if (osnapPoint == null)
+			{
+				return;
+			}
+
+			this._writer.Write(1, DimensionAssociation.OsnapPointRefClassName);
+
+			this._writer.Write(72, (short)osnapPoint.ObjectOsnapType);
+			this._writer.WriteHandle(331, osnapPoint.Geometry);
+			this._writer.Write(73, (short)osnapPoint.SubentType);
+			this._writer.Write(91, osnapPoint.GsMarker);
+			this._writer.Write(40, osnapPoint.GeometryParameter);
+
+			this._writer.Write(10, osnapPoint.OsnapPoint);
+
+			this._writer.Write(75, (short)(osnapPoint.HasLastPointRef ? 1 : 0));
 		}
 
 		private void writeSortentsTable(SortEntitiesTable e)

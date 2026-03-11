@@ -2,6 +2,16 @@
 {
 	public static class DxfSubclassMarker
 	{
+		public const string AecWall = "AecDbWall";
+
+		public const string AecDbWallStyle = "AecDbWallStyle";
+
+		public const string AecDbCleanupGroupDef = "AecDbCleanupGroupDef";
+
+		public const string BinRecord = "BinRecord";
+
+		public const string ApplicationId = "AcDbRegAppTableRecord";
+
 		public const string AcDbPlaceHolder = "AcDbPlaceHolder";
 
 		public const string AlignedDimension = "AcDbAlignedDimension";
@@ -12,13 +22,13 @@
 
 		public const string AnnotScaleObjectContextData = "AcDbAnnotScaleObjectContextData";
 
-		public const string ApplicationId = "AcDbRegAppTableRecord";
-
 		public const string Arc = "AcDbArc";
 
 		public const string Attribute = "AcDbAttribute";
 
 		public const string AttributeDefinition = "AcDbAttributeDefinition";
+
+		public const string BlkRefObjectContextData = "AcDbBlkRefObjectContextData";
 
 		public const string Block1PtParameter = "AcDbBlock1PtParameter";
 
@@ -48,6 +58,10 @@
 
 		public const string BlockLinearParameter = "AcDbBlockLinearParameter";
 
+		public const string BlockMoveAction = "AcDbBlockMoveAction";
+
+		public const string BlockPointParameter = "AcDbBlockPointParameter";
+
 		public const string BlockParameter = "AcDbBlockParameter";
 
 		public const string BlockRecord = "AcDbBlockTableRecord";
@@ -64,6 +78,8 @@
 
 		public const string BlockVisibilityParameter = "AcDbBlockVisibilityParameter";
 
+		public const string BlockXYGrip = "AcDbBlockXYGrip";
+
 		public const string CellStyleMap = "AcDbCellStyleMap";
 
 		public const string Circle = "AcDbCircle";
@@ -71,6 +87,8 @@
 		public const string DbColor = "AcDbColor";
 
 		public const string DiametricDimension = "AcDbDiametricDimension";
+
+		public const string DetailViewStyle = "AcDbDetailViewStyle";
 
 		public const string Dictionary = "AcDbDictionary";
 
@@ -86,6 +104,8 @@
 
 		public const string DimensionStyleTable = "AcDbDimStyleTable";
 
+		public const string DimensionAssociation = "AcDbDimAssoc";
+
 		public const string Ellipse = "AcDbEllipse";
 
 		public const string Entity = "AcDbEntity";
@@ -95,6 +115,10 @@
 		public const string EvalGraphExpr = "AcDbEvalExpr";
 
 		public const string Face3d = "AcDbFace";
+
+		public const string Field = "AcDbField";
+
+		public const string FieldList = "AcDbFieldList";
 
 		public const string Filter = "AcDbFilter";
 
@@ -107,6 +131,8 @@
 		public const string Hatch = "AcDbHatch";
 
 		public const string Helix = "AcDbHelix";
+
+		public const string IdSet = "AcDbIdSet";
 
 		public const string Insert = "AcDbBlockReference";
 
@@ -130,6 +156,8 @@
 
 		public const string Material = "AcDbMaterial";
 
+		public const string ModelDocViewStyle = "AcDbModelDocViewStyle";
+
 		public const string Mesh = "AcDbSubDMesh";
 
 		public const string MInsert = "AcDbMInsertBlock";
@@ -143,6 +171,8 @@
 		public const string ModelerGeometry = "AcDbModelerGeometry";
 
 		public const string MText = "AcDbMText";
+
+		public const string MTextAttributeObjectContextData = "AcDbMTextAttributeObjectContextData";
 
 		public const string MultiLeader = "AcDbMLeader";
 
@@ -198,6 +228,8 @@
 
 		public const string Scale = "AcDbScale";
 
+		public const string SectionViewStyle = "AcDbSectionViewStyle";
+
 		public const string Shape = "AcDbShape";
 
 		public const string Solid = "AcDbTrace";
@@ -233,6 +265,8 @@
 		public const string Underlay = "AcDbUnderlayReference";
 
 		public const string UnderlayDefinition = "AcDbUnderlayDefinition";
+
+		public const string DynamicBlockPurgePreventer = "AcDbDynamicBlockPurgePreventer";
 
 		public const string Vertex = "AcDbVertex";
 
