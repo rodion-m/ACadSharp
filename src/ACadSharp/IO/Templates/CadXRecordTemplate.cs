@@ -22,6 +22,11 @@ namespace ACadSharp.IO.Templates
 
 			foreach (var entry in _entries)
 			{
+				if (entry.Item2 == 0)
+				{
+					continue;
+				}
+
 				if (builder.TryGetCadObject<CadObject>(entry.Item2, out CadObject obj))
 				{
 					this.CadObject.CreateEntry(entry.Item1, obj);

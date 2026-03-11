@@ -5593,6 +5593,18 @@ namespace ACadSharp.IO.DWG
 				case DxfFileToken.ObjectBlockRotationParameter:
 					template = this.readBlockRotationParameter();
 					break;
+				case DxfFileToken.ObjectBlockBasePointParameter:
+					template = this.readBlockBasePointParameter();
+					break;
+				case DxfFileToken.ObjectBlockLinearParameter:
+					template = this.readBlockLinearParameter();
+					break;
+				case DxfFileToken.ObjectBlockPointParameter:
+					template = this.readBlockPointParameter();
+					break;
+				case DxfFileToken.ObjectBlockMoveAction:
+					template = this.readBlockMoveAction();
+					break;
 				case DxfFileToken.ObjectBlockVisibilityParameter:
 					template = this.readBlockVisibilityParameter();
 					break;
@@ -5609,9 +5621,16 @@ namespace ACadSharp.IO.DWG
 					template = new CadBlockRotationGripTemplate();
 					this.readBlockGrip(template as CadBlockRotationGripTemplate);
 					break;
+				case DxfFileToken.ObjectBlockXYGrip:
+					template = new CadBlockXYGripTemplate();
+					this.readBlockGrip(template as CadBlockXYGripTemplate);
+					break;
 				case DxfFileToken.ObjectBlockVisibilityGrip:
 					template = new CadBlockVisibilityGripTemplate();
 					this.readBlockGrip(template as CadBlockVisibilityGripTemplate);
+					break;
+				case "BLOCKFLIPGRIP":
+					template = this.readUnknownEvaluationProxyObject(c);
 					break;
 				case DxfFileToken.ObjectBlockFlipAction:
 					template = this.readBlockFlipAction();
@@ -5630,6 +5649,18 @@ namespace ACadSharp.IO.DWG
 					break;
 				case DxfFileToken.ObjectVisualStyle:
 					template = this.readVisualStyle();
+					break;
+				case DxfFileToken.ObjectCellStyleMap:
+					template = this.readBenignNonGraphicalObject(new CellStyleMap());
+					break;
+				case DxfFileToken.ObjectDetailViewStyle:
+					template = this.readBenignNonGraphicalObject(new DetailViewStyle());
+					break;
+				case DxfFileToken.ObjectSectionViewStyle:
+					template = this.readBenignNonGraphicalObject(new SectionViewStyle());
+					break;
+				case DxfFileToken.ObjectDynamicBlockPurgePreventer:
+					template = this.readBenignNonGraphicalObject(new DynamicBlockPurgePreventer());
 					break;
 				case DxfFileToken.ObjectPlotSettings:
 					template = this.readPlotSettings();
@@ -5658,8 +5689,35 @@ namespace ACadSharp.IO.DWG
 			}
 			else if (template == null && !c.IsAnEntity)
 			{
-				template = this.readUnknownNonGraphicalObject(c);
-				this._builder.Notify($"Unlisted object with DXF name {c.DxfName} has been read as an UnknownNonGraphicalObject", NotificationType.Warning);
+				if (isLikelyEvaluationExpressionDxfName(c.DxfName))
+				{
+					template = this.readUnknownEvaluationExpression(c);
+					if (!isSilentPassThroughDxfName(c.DxfName))
+					{
+						this._builder.Notify(
+							$"Unlisted object with DXF name {c.DxfName} has been read as an UnknownEvaluationExpression",
+							NotificationType.None);
+					}
+				}
+				else
+				{
+					template = this.readUnknownNonGraphicalObject(c);
+					if (isBenignPassThroughDxfName(c.DxfName))
+					{
+						if (!isSilentPassThroughDxfName(c.DxfName))
+						{
+							this._builder.Notify(
+								$"Unlisted object with DXF name {c.DxfName} has been read as an UnknownNonGraphicalObject",
+								NotificationType.None);
+						}
+					}
+					else
+					{
+						this._builder.Notify(
+							$"Unlisted object with DXF name {c.DxfName} has been read as an UnknownNonGraphicalObject",
+							NotificationType.Warning);
+					}
+				}
 			}
 
 			return template;
@@ -5687,22 +5745,13 @@ namespace ACadSharp.IO.DWG
 
 			this.readBlockAction(template);
 
-			// 92
 			blockFlipAction.Value92 = this._mergedReaders.ReadBitLong();
-			// 93
-			blockFlipAction.Value93 = this._mergedReaders.ReadBitLong();
-			// 94
-			blockFlipAction.Value94 = this._mergedReaders.ReadBitLong();
-			// 95
-			blockFlipAction.Value95 = this._mergedReaders.ReadBitLong();
-
-			// 301
 			blockFlipAction.Caption301 = this._mergedReaders.ReadVariableText();
-			// 302
+			blockFlipAction.Value93 = this._mergedReaders.ReadBitLong();
 			blockFlipAction.Caption302 = this._mergedReaders.ReadVariableText();
-			// 303
+			blockFlipAction.Value94 = this._mergedReaders.ReadBitLong();
 			blockFlipAction.Caption303 = this._mergedReaders.ReadVariableText();
-			// 304
+			blockFlipAction.Value95 = this._mergedReaders.ReadBitLong();
 			blockFlipAction.Caption304 = this._mergedReaders.ReadVariableText();
 
 			return template;
@@ -5715,25 +5764,13 @@ namespace ACadSharp.IO.DWG
 
 			this.readBlock2PtParameter(template);
 
-			//	305
 			blockFlipParameter.Caption = this._mergedReaders.ReadVariableText();
-			//	306
 			blockFlipParameter.Description = this._mergedReaders.ReadVariableText();
-			//	307
 			blockFlipParameter.BaseStateName = this._mergedReaders.ReadVariableText();
-			//	308
 			blockFlipParameter.FlippedStateName = this._mergedReaders.ReadVariableText();
-			//	1012, 1022, 1032
 			blockFlipParameter.CaptionLocation = this._mergedReaders.Read3BitDouble();
-			//	309
-			blockFlipParameter.Caption309 = this._mergedReaders.ReadVariableText();
-			//	96
 			blockFlipParameter.Value96 = this._mergedReaders.ReadBitLong();
-
-			//	The remainder seen in DXF cannot be read
-			//DwgAnalyseTool.Analyse03(_objectReader, _handlesReader, _textReader, "BD", null, 1000);
-			//blockFlipParameter.Caption1001 = this._mergedReaders.ReadVariableText();
-			//blockFlipParameter.Point1010 = this._mergedReaders.Read3BitDouble();
+			blockFlipParameter.Caption309 = this._mergedReaders.ReadVariableText();
 
 			return template;
 		}
@@ -6085,6 +6122,75 @@ namespace ACadSharp.IO.DWG
 			this.readCommonNonEntityData(template);
 
 			return template;
+		}
+
+		private CadTemplate readUnknownEvaluationExpression(DxfClass dxfClass)
+		{
+			UnknownEvaluationExpression obj = new UnknownEvaluationExpression(dxfClass);
+			CadEvaluationExpressionTemplate template = new CadEvaluationExpressionTemplate(obj);
+			this.readEvaluationExpression(template);
+			return template;
+		}
+
+		private CadTemplate readUnknownEvaluationProxyObject(DxfClass dxfClass)
+		{
+			UnknownProxyEvaluationExpression obj = new UnknownProxyEvaluationExpression(dxfClass);
+			CadEvaluationExpressionTemplate template = new CadEvaluationExpressionTemplate(obj);
+			this.readCommonNonEntityData(template);
+			this.readCommonProxyData(obj);
+			return template;
+		}
+
+		private CadTemplate readUnknownProxyNonGraphicalObject(DxfClass dxfClass)
+		{
+			UnknownProxyNonGraphicalObject obj = new UnknownProxyNonGraphicalObject(dxfClass);
+			CadNonGraphicalObjectTemplate template = new CadNonGraphicalObjectTemplate(obj);
+			this.readCommonNonEntityData(template);
+			this.readCommonProxyData(obj);
+			return template;
+		}
+
+		private CadTemplate readBenignNonGraphicalObject(NonGraphicalObject obj)
+		{
+			CadNonGraphicalObjectTemplate template = new CadNonGraphicalObjectTemplate(obj);
+			this.readCommonNonEntityData(template);
+			return template;
+		}
+
+		private static bool isBenignPassThroughDxfName(string dxfName)
+		{
+			return string.Equals(dxfName, DxfFileToken.ObjectDetailViewStyle, StringComparison.OrdinalIgnoreCase)
+				|| string.Equals(dxfName, DxfFileToken.ObjectSectionViewStyle, StringComparison.OrdinalIgnoreCase)
+				|| string.Equals(dxfName, DxfFileToken.ObjectDynamicBlockPurgePreventer, StringComparison.OrdinalIgnoreCase)
+				|| string.Equals(dxfName, DxfFileToken.ObjectCellStyleMap, StringComparison.OrdinalIgnoreCase)
+				|| string.Equals(dxfName, "ACDB_HATCHSCALECONTEXTDATA_CLASS", StringComparison.OrdinalIgnoreCase)
+				|| string.Equals(dxfName, "ACDBASSOCPERSSUBENTMANAGER", StringComparison.OrdinalIgnoreCase)
+				|| string.Equals(dxfName, "WIPEOUTVARIABLES", StringComparison.OrdinalIgnoreCase);
+		}
+
+		private static bool isSilentPassThroughDxfName(string dxfName)
+		{
+			return string.Equals(dxfName, "BLOCKLINEARGRIP", StringComparison.OrdinalIgnoreCase)
+				|| string.Equals(dxfName, "BLOCKSTRETCHACTION", StringComparison.OrdinalIgnoreCase)
+				|| string.Equals(dxfName, "BLOCKSCALEACTION", StringComparison.OrdinalIgnoreCase)
+				|| string.Equals(dxfName, "BLOCKALIGNMENTGRIP", StringComparison.OrdinalIgnoreCase)
+				|| string.Equals(dxfName, "BLOCKALIGNMENTPARAMETER", StringComparison.OrdinalIgnoreCase)
+				|| string.Equals(dxfName, "ACDB_HATCHSCALECONTEXTDATA_CLASS", StringComparison.OrdinalIgnoreCase)
+				|| string.Equals(dxfName, "ACDBASSOCPERSSUBENTMANAGER", StringComparison.OrdinalIgnoreCase)
+				|| string.Equals(dxfName, "WIPEOUTVARIABLES", StringComparison.OrdinalIgnoreCase);
+		}
+
+		private static bool isLikelyEvaluationExpressionDxfName(string dxfName)
+		{
+			if (string.IsNullOrWhiteSpace(dxfName))
+			{
+				return false;
+			}
+
+			return dxfName.StartsWith("BLOCK", StringComparison.OrdinalIgnoreCase)
+				&& (dxfName.EndsWith("ACTION", StringComparison.OrdinalIgnoreCase)
+					|| dxfName.EndsWith("PARAMETER", StringComparison.OrdinalIgnoreCase)
+					|| dxfName.EndsWith("GRIP", StringComparison.OrdinalIgnoreCase));
 		}
 
 		#endregion Text entities

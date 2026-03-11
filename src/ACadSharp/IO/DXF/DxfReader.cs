@@ -170,6 +170,9 @@ namespace ACadSharp.IO
 					case DxfFileToken.ObjectsSection:
 						this.readObjects();
 						break;
+					case DxfFileToken.AcdsDataSection:
+						this.skipSection();
+						break;
 					default:
 						this.triggerNotification(($"Section not implemented {this._reader.ValueAsString}"), NotificationType.NotImplemented);
 						break;
@@ -471,6 +474,16 @@ namespace ACadSharp.IO
 		private void readThumbnailImage()
 		{
 			throw new NotImplementedException();
+		}
+
+		private void skipSection()
+		{
+			this._reader.ReadNext();
+			while (this._reader.ValueAsString != DxfFileToken.EndSection
+				&& this._reader.ValueAsString != DxfFileToken.EndOfFile)
+			{
+				this._reader.ReadNext();
+			}
 		}
 
 		private IDxfStreamReader getReader()

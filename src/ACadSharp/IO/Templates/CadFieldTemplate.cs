@@ -21,6 +21,11 @@ internal class CadFieldTemplate : CadTemplate<Field>
 
 		foreach (var handle in CadObjectsHandles)
 		{
+			if (handle == 0)
+			{
+				continue;
+			}
+
 			if (builder.TryGetCadObject(handle, out CadObject cobject))
 			{
 				this.CadObject.CadObjects.Add(cobject);
@@ -33,6 +38,11 @@ internal class CadFieldTemplate : CadTemplate<Field>
 
 		foreach (var handle in ChildrenHandles)
 		{
+			if (handle == 0)
+			{
+				continue;
+			}
+
 			if (builder.TryGetCadObject(handle, out Field f))
 			{
 				this.CadObject.Children.Add(f);

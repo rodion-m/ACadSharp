@@ -23,5 +23,17 @@ namespace ACadSharp.Objects.Evaluations
 
 		[DxfCodeValue(171)]
 		public short Value171 { get; set; }
+
+		[DxfCodeValue(91)]
+		public int Value91 { get; set; }
+
+		[DxfCodeValue(92)]
+		public int Value92 { get; set; }
+
+		[DxfCodeValue(301)]
+		public string Value301 { get; set; }
+
+		[DxfCodeValue(302)]
+		public string Value302 { get; set; }
 	}
 }

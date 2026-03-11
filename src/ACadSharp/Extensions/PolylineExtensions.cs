@@ -32,7 +32,7 @@ namespace ACadSharp.Extensions
 				}
 
 				Entity e = null;
-				if (curr.Bulge == 0)
+				if (isStraightSegment(curr, next))
 				{
 					//Is a line
 					e = new Line
@@ -48,13 +48,20 @@ namespace ACadSharp.Extensions
 					XY p1 = curr.Location.Convert<XY>();
 					XY p2 = next.Location.Convert<XY>();
 
-					//Is an arc
-					Arc arc = Arc.CreateFromBulge(p1, p2, curr.Bulge);
-					arc.Center = new XYZ(arc.Center.X, arc.Center.Y, polyline.Elevation);
-					arc.Normal = polyline.Normal;
-					arc.Thickness = polyline.Thickness;
-
-					e = arc;
+					if (tryCreateArcSegment(polyline, p1, p2, curr.Bulge, out Arc arc))
+					{
+						e = arc;
+					}
+					else
+					{
+						e = new Line
+						{
+							StartPoint = curr.Location.Convert<XYZ>(),
+							EndPoint = next.Location.Convert<XYZ>(),
+							Normal = polyline.Normal,
+							Thickness = polyline.Thickness,
+						};
+					}
 				}
 
 				e.MatchProperties(polyline);
@@ -114,7 +121,7 @@ namespace ACadSharp.Extensions
 					break;
 				}
 
-				if (curr.Bulge == 0)
+				if (isStraightSegment(curr, next))
 				{
 					if (i == 0)
 					{
@@ -128,9 +135,18 @@ namespace ACadSharp.Extensions
 					XY p1 = curr.Location.Convert<XY>();
 					XY p2 = next.Location.Convert<XY>();
 
-					IEnumerable<T> lst = Arc.CreateFromBulge(p1, p2, curr.Bulge)
-						.PolygonalVertexes(precision)
-						.Select(p => p.Convert<T>());
+					if (!tryCreateArcSegment(polyline, p1, p2, curr.Bulge, out Arc arc))
+					{
+						if (i == 0)
+						{
+							points.Add(curr.Location.Convert<T>());
+						}
+
+						points.Add(next.Location.Convert<T>());
+						continue;
+					}
+
+					IEnumerable<T> lst = arc.PolygonalVertexes(precision).Select(p => p.Convert<T>());
 
 					var f = lst.First().Round(8);
 					var l = lst.Last().Round(8);
@@ -148,6 +164,57 @@ namespace ACadSharp.Extensions
 			}
 
 			return points;
+		}
+
+		private static bool isStraightSegment(IVertex curr, IVertex next)
+		{
+			if (curr == null || next == null)
+			{
+				return true;
+			}
+
+			if (Math.Abs(curr.Bulge) <= 1e-12)
+			{
+				return true;
+			}
+
+			XY p1 = curr.Location.Convert<XY>();
+			XY p2 = next.Location.Convert<XY>();
+			return !isFinite(curr.Bulge) || p1.DistanceFrom(p2) <= 1e-9;
+		}
+
+		private static bool tryCreateArcSegment(IPolyline polyline, XY p1, XY p2, double bulge, out Arc arc)
+		{
+			arc = null;
+			try
+			{
+				if (!isFinite(bulge) || p1.DistanceFrom(p2) <= 1e-9 || Math.Abs(bulge) <= 1e-12)
+				{
+					return false;
+				}
+
+				arc = Arc.CreateFromBulge(p1, p2, bulge);
+				if (arc == null || !isFinite(arc.Radius) || arc.Radius <= 1e-12)
+				{
+					arc = null;
+					return false;
+				}
+
+				arc.Center = new XYZ(arc.Center.X, arc.Center.Y, polyline.Elevation);
+				arc.Normal = polyline.Normal;
+				arc.Thickness = polyline.Thickness;
+				return true;
+			}
+			catch
+			{
+				arc = null;
+				return false;
+			}
+		}
+
+		private static bool isFinite(double value)
+		{
+			return !double.IsNaN(value) && !double.IsInfinity(value);
 		}
 	}
 }

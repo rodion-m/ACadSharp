@@ -1,6 +1,8 @@
 ﻿using System;
 using System.IO;
 
+using CSUtilities.IO;
+
 namespace ACadSharp.IO.DWG
 {
 	/// <summary>
@@ -76,7 +78,7 @@ namespace ACadSharp.IO.DWG
 					tempBuf = new byte[compressedBytes];
 				}
 				dst.Position = position - compOffset;
-				dst.Read(tempBuf, 0, Math.Min(compressedBytes, compOffset));
+				StreamIO.ReadExactly(dst, tempBuf, 0, Math.Min(compressedBytes, compOffset));
 				dst.Position = position;
 				while (compressedBytes > 0)
 				{
@@ -106,7 +108,7 @@ namespace ACadSharp.IO.DWG
 			{
 				tempBuf = new byte[count];
 			}
-			src.Read(tempBuf, 0, count);
+			StreamIO.ReadExactly(src, tempBuf, 0, count);
 			dst.Write(tempBuf, 0, count);
 
 			return (byte)src.ReadByte();

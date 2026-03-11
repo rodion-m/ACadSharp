@@ -40,6 +40,10 @@ namespace ACadSharp.IO.DWG
 				case DimensionAssociation:
 				case EvaluationGraph:
 				case Material:
+				case CellStyleMap:
+				case DetailViewStyle:
+				case DynamicBlockPurgePreventer:
+				case SectionViewStyle:
 				case UnknownNonGraphicalObject:
 				case VisualStyle:
 				case TableStyle:
@@ -927,6 +931,11 @@ namespace ACadSharp.IO.DWG
 					break;
 				case XRecord record:
 					this.writeXRecord(record);
+					break;
+				case CellStyleMap:
+				case DetailViewStyle:
+				case DynamicBlockPurgePreventer:
+				case SectionViewStyle:
 					break;
 				default:
 					throw new NotImplementedException($"Object not implemented : {obj.GetType().FullName}");

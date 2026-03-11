@@ -33,7 +33,15 @@ namespace ACadSharp.IO.Templates
 
 			foreach (var item in this.Entries)
 			{
-				if (builder.TryGetCadObject(item.Value, out NonGraphicalObject entry))
+				NonGraphicalObject entry = null;
+				if (!builder.TryGetCadObject(item.Value, out entry)
+					&& builder.TryGetObjectTemplate(item.Value, out ICadObjectTemplate template)
+					&& template.CadObject is NonGraphicalObject nonGraphicalObject)
+				{
+					entry = nonGraphicalObject;
+				}
+
+				if (entry != null)
 				{
 					//This section basically sets the key and name to the same value to make sure that the 
 					//different collections and dictionaries work properly.

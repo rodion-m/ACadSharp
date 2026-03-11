@@ -1,4 +1,5 @@
-﻿using ACadSharp.Entities;
+using ACadSharp;
+using ACadSharp.Entities;
 using ACadSharp.Objects.Evaluations;
 using System.Collections.Generic;
 
@@ -6,7 +7,6 @@ namespace ACadSharp.IO.Templates
 {
 	internal class CadBlockActionTemplate : CadBlockElementTemplate
 	{
-
 		public BlockAction BlockAction { get { return this.CadObject as BlockAction; } }
 
 		public HashSet<ulong> EntityHandles { get; } = new();
@@ -25,6 +25,10 @@ namespace ACadSharp.IO.Templates
 				if (builder.TryGetCadObject(handle, out Entity entity))
 				{
 					BlockAction.Entities.Add(entity);
+				}
+				else if (builder.TryGetCadObject(handle, out CadObject dependency))
+				{
+					continue;
 				}
 				else
 				{

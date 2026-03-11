@@ -40,13 +40,14 @@ namespace ACadSharp.IO.Templates
 
 			foreach ((ulong?, ulong?) pair in this.Values)
 			{
+				if (!pair.Item2.HasValue || pair.Item2.Value == 0)
+				{
+					continue;
+				}
+
 				if (builder.TryGetCadObject(pair.Item2, out Entity entity))
 				{
 					this.CadObject.Add(entity, pair.Item1.Value);
-				}
-				else
-				{
-					builder.Notify($"Entity in SortEntitiesTable {this.CadObject.Handle} not found {pair.Item2}", NotificationType.Warning);
 				}
 			}
 		}

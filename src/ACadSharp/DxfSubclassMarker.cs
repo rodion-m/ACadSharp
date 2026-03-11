@@ -58,6 +58,10 @@
 
 		public const string BlockLinearParameter = "AcDbBlockLinearParameter";
 
+		public const string BlockMoveAction = "AcDbBlockMoveAction";
+
+		public const string BlockPointParameter = "AcDbBlockPointParameter";
+
 		public const string BlockParameter = "AcDbBlockParameter";
 
 		public const string BlockRecord = "AcDbBlockTableRecord";
@@ -74,6 +78,8 @@
 
 		public const string BlockVisibilityParameter = "AcDbBlockVisibilityParameter";
 
+		public const string BlockXYGrip = "AcDbBlockXYGrip";
+
 		public const string CellStyleMap = "AcDbCellStyleMap";
 
 		public const string Circle = "AcDbCircle";
@@ -81,6 +87,8 @@
 		public const string DbColor = "AcDbColor";
 
 		public const string DiametricDimension = "AcDbDiametricDimension";
+
+		public const string DetailViewStyle = "AcDbDetailViewStyle";
 
 		public const string Dictionary = "AcDbDictionary";
 
@@ -147,6 +155,8 @@
 		public const string LwPolyline = "AcDbPolyline";
 
 		public const string Material = "AcDbMaterial";
+
+		public const string ModelDocViewStyle = "AcDbModelDocViewStyle";
 
 		public const string Mesh = "AcDbSubDMesh";
 
@@ -218,6 +228,8 @@
 
 		public const string Scale = "AcDbScale";
 
+		public const string SectionViewStyle = "AcDbSectionViewStyle";
+
 		public const string Shape = "AcDbShape";
 
 		public const string Solid = "AcDbTrace";
@@ -253,6 +265,8 @@
 		public const string Underlay = "AcDbUnderlayReference";
 
 		public const string UnderlayDefinition = "AcDbUnderlayDefinition";
+
+		public const string DynamicBlockPurgePreventer = "AcDbDynamicBlockPurgePreventer";
 
 		public const string Vertex = "AcDbVertex";
 

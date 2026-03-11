@@ -4,6 +4,8 @@ public static class DxfFileToken
 {
 	public const string BeginSection = "SECTION";
 
+	public const string AcdsDataSection = "ACDSDATA";
+
 	public const string BlkRefObjectContextData = "ACDB_BLKREFOBJECTCONTEXTDATA_CLASS";
 
 	public const string BlkRefToken = "{BLKREFS";
@@ -168,6 +170,8 @@ public static class DxfFileToken
 
 	public const string ObjectBlockLinearParameter = "BLOCKLINEARPARAMETER";
 
+	public const string ObjectBlockMoveAction = "BLOCKMOVEACTION";
+
 	public const string ObjectBlockPointParameter = "BLOCKPOINTPARAMETER";
 
 	public const string ObjectBlockRepresentationData = "ACDB_BLOCKREPRESENTATION_DATA";
@@ -182,9 +186,13 @@ public static class DxfFileToken
 
 	public const string ObjectBlockVisibilityParameter = "BLOCKVISIBILITYPARAMETER";
 
+	public const string ObjectBlockXYGrip = "BLOCKXYGRIP";
+
 	public const string ObjectCell = "CELL";
 
 	public const string ObjectCellStyleMap = "CELLSTYLEMAP";
+
+	public const string ObjectDetailViewStyle = "ACDBDETAILVIEWSTYLE";
 
 	public const string ObjectDBColor = "DBCOLOR";
 
@@ -195,6 +203,8 @@ public static class DxfFileToken
 	public const string ObjectDictionaryWithDefault = "ACDBDICTIONARYWDFLT";
 
 	public const string ObjectDimensionAssociation = "DIMASSOC";
+
+	public const string ObjectDynamicBlockPurgePreventer = "ACDB_DYNAMICBLOCKPURGEPREVENTER_VERSION";
 
 	public const string ObjectEvalGraph = "ACAD_EVALUATION_GRAPH";
 
@@ -231,6 +241,8 @@ public static class DxfFileToken
 	public const string ObjectRasterVariables = "RASTERVARIABLES";
 
 	public const string ObjectScale = "SCALE";
+
+	public const string ObjectSectionViewStyle = "ACDBSECTIONVIEWSTYLE";
 
 	public const string ObjectSortEntsTable = "SORTENTSTABLE";
 

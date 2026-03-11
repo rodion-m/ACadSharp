@@ -12,6 +12,11 @@ namespace ACadSharp.IO.Templates
 
 			public void Build(CadDocumentBuilder builder)
 			{
+				if (!this.ExpressionHandle.HasValue || this.ExpressionHandle.Value == 0)
+				{
+					return;
+				}
+
 				if (builder.TryGetCadObject(this.ExpressionHandle, out EvaluationExpression evExpression))
 				{
 					this.Node.Expression = evExpression;
